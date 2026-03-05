@@ -1,0 +1,77 @@
+# Phantom Filler Configuration
+# Copy this file to config.toml and adjust values for your environment.
+# Environment variables with PHANTOM_ prefix override these values.
+
+# === Chain Configurations ===
+
+[chains.ethereum]
+chain_id = "ethereum"
+rpc_url = "https://eth-mainnet.g.alchemy.com/v2/YOUR_KEY"
+ws_url = "wss://eth-mainnet.g.alchemy.com/v2/YOUR_KEY"
+max_concurrent_requests = 64
+request_timeout_ms = 5000
+mempool_enabled = true
+
+[chains.arbitrum]
+chain_id = "arbitrum"
+rpc_url = "https://arb-mainnet.g.alchemy.com/v2/YOUR_KEY"
+ws_url = "wss://arb-mainnet.g.alchemy.com/v2/YOUR_KEY"
+max_concurrent_requests = 64
+request_timeout_ms = 3000
+mempool_enabled = false
+
+[chains.base]
+chain_id = "base"
+rpc_url = "https://base-mainnet.g.alchemy.com/v2/YOUR_KEY"
+max_concurrent_requests = 32
+request_timeout_ms = 3000
+
+# === Database ===
+# Override with PHANTOM_DATABASE_URL env var
+
+[database]
+url = "postgres://phantom:phantom@localhost:5432/phantom_filler"
+max_connections = 10
+min_connections = 2
+connect_timeout_secs = 10
+
+# === Redis ===
+# Override with PHANTOM_REDIS_URL env var
+
+[redis]
+url = "redis://localhost:6379"
+pool_size = 16
+
+# === Strategy Engine ===
+
+[strategy]
+min_profit_bps = 10          # Minimum 0.1% profit to execute
+max_gas_price_gwei = 100     # Max gas price willing to pay
+evaluation_timeout_ms = 50   # Timeout per strategy evaluation
+enabled_strategies = ["simple_arb"]
+
+# === Execution Engine ===
+
+[execution]
+# private_key = ""           # Set via PHANTOM_PRIVATE_KEY env var
+flashbots_enabled = false
+# flashbots_relay_url = "https://relay.flashbots.net"
+max_retries = 3
+retry_delay_ms = 1000
+
+# === API Server ===
+# Override host/port with PHANTOM_API_HOST / PHANTOM_API_PORT
+
+[api]
+host = "127.0.0.1"
+port = 8080
+websocket_enabled = true
+
+# === Metrics & Observability ===
+# Override log level with PHANTOM_LOG_LEVEL
+
+[metrics]
+enabled = true
+port = 9090
+log_level = "info"
+json_logs = false
