@@ -1,5 +1,6 @@
 //! Transaction builder for constructing EIP-1559 fill transactions.
 
+use alloy::network::TransactionBuilder as _;
 use alloy::primitives::{Address, Bytes, U256};
 use alloy::rpc::types::TransactionRequest;
 use phantom_common::error::{ExecutionError, ExecutionResult};
@@ -80,7 +81,7 @@ impl TransactionBuilder {
     pub fn build(&self, params: &TransactionParams) -> ExecutionResult<TransactionRequest> {
         self.validate(params)?;
 
-        let tx = TransactionRequest::default()
+        let mut tx = TransactionRequest::default()
             .from(params.from)
             .to(params.to)
             .input(params.calldata.clone().into())
@@ -89,6 +90,8 @@ impl TransactionBuilder {
             .gas_limit(params.gas_limit)
             .max_fee_per_gas(params.max_fee_per_gas)
             .max_priority_fee_per_gas(params.max_priority_fee_per_gas);
+
+        tx.set_chain_id(params.chain_id);
 
         debug!(
             from = %params.from,
