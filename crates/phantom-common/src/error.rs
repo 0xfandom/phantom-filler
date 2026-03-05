@@ -170,6 +170,38 @@ pub enum ExecutionError {
     RelayFailed(String),
 }
 
+/// Errors from inventory and balance management.
+#[derive(Debug, thiserror::Error)]
+pub enum InventoryError {
+    /// Balance check or refresh failed.
+    #[error("balance check failed: {0}")]
+    BalanceCheckFailed(String),
+
+    /// Position limit exceeded.
+    #[error("position limit exceeded: {0}")]
+    PositionLimitExceeded(String),
+
+    /// Insufficient balance for operation.
+    #[error("insufficient balance: {0}")]
+    InsufficientBalance(String),
+}
+
+/// Errors from settlement and reconciliation.
+#[derive(Debug, thiserror::Error)]
+pub enum SettlementError {
+    /// Transaction confirmation failed.
+    #[error("confirmation failed: {0}")]
+    ConfirmationFailed(String),
+
+    /// Transaction reverted on chain.
+    #[error("transaction reverted: {0}")]
+    TransactionReverted(String),
+
+    /// Settlement timeout.
+    #[error("settlement timed out after {0}ms")]
+    Timeout(u64),
+}
+
 /// Convenience result alias using the top-level error type.
 pub type PhantomResult<T> = std::result::Result<T, PhantomError>;
 
@@ -187,6 +219,12 @@ pub type StrategyResult<T> = std::result::Result<T, StrategyError>;
 
 /// Result alias for execution operations.
 pub type ExecutionResult<T> = std::result::Result<T, ExecutionError>;
+
+/// Result alias for inventory operations.
+pub type InventoryResult<T> = std::result::Result<T, InventoryError>;
+
+/// Result alias for settlement operations.
+pub type SettlementResult<T> = std::result::Result<T, SettlementError>;
 
 #[cfg(test)]
 mod tests {
