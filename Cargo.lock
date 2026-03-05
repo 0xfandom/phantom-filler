@@ -3307,11 +3307,13 @@ name = "phantom-metrics"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "dashmap",
  "metrics",
  "metrics-exporter-prometheus",
  "phantom-common",
  "proptest",
  "serde",
+ "serde_json",
  "thiserror 2.0.18",
  "tokio",
  "tracing",
