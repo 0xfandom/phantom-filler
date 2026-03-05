@@ -2,4 +2,5 @@
 
 pub mod builder;
 pub mod nonce;
+pub mod relay;
 pub mod wallet;
