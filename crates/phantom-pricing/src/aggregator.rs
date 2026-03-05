@@ -141,22 +141,39 @@ impl PriceAggregator {
 
         // Query all sources concurrently.
         let timeout = std::time::Duration::from_millis(self.config.timeout_ms);
+
+        let futs: Vec<_> = self
+            .sources
+            .iter()
+            .map(|source| {
+                let source = Arc::clone(source);
+                let base = base.clone();
+                let quote = quote.clone();
+                async move {
+                    let result = tokio::time::timeout(
+                        timeout,
+                        source.get_price(&base, &quote, chain_id),
+                    )
+                    .await;
+                    (source.name().to_string(), result)
+                }
+            })
+            .collect();
+
+        let results = futures::future::join_all(futs).await;
+
         let mut raw_prices: Vec<(U256, String)> = Vec::new();
-
-        for source in &self.sources {
-            let result =
-                tokio::time::timeout(timeout, source.get_price(base, quote, chain_id)).await;
-
+        for (name, result) in results {
             match result {
                 Ok(Ok(price)) => {
-                    debug!(source = source.name(), price = %price, "got price from source");
-                    raw_prices.push((price, source.name().to_string()));
+                    debug!(source = %name, price = %price, "got price from source");
+                    raw_prices.push((price, name));
                 }
                 Ok(Err(e)) => {
-                    warn!(source = source.name(), error = %e, "source returned error");
+                    warn!(source = %name, error = %e, "source returned error");
                 }
                 Err(_) => {
-                    warn!(source = source.name(), "source timed out");
+                    warn!(source = %name, "source timed out");
                 }
             }
         }
