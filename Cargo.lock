@@ -3248,6 +3248,7 @@ dependencies = [
  "anyhow",
  "async-trait",
  "dashmap",
+ "hex",
  "parking_lot",
  "phantom-chain",
  "phantom-common",
