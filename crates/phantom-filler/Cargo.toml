@@ -29,3 +29,20 @@ reqwest.workspace = true
 serde_json.workspace = true
 alloy.workspace = true
 chrono.workspace = true
+criterion.workspace = true
+
+[[bench]]
+name = "orderbook_bench"
+harness = false
+
+[[bench]]
+name = "risk_bench"
+harness = false
+
+[[bench]]
+name = "pnl_bench"
+harness = false
+
+[[bench]]
+name = "execution_bench"
+harness = false
