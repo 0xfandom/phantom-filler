@@ -18,6 +18,9 @@ contract PhantomSettlement is ISettlement, Ownable {
     /// @notice Emitted when a recorder is deauthorized.
     event RecorderRemoved(address indexed recorder);
 
+    /// @notice Emitted when a disputed settlement is resolved.
+    event DisputeResolved(bytes32 indexed orderHash, address indexed resolver);
+
     // ─── Errors ──────────────────────────────────────────────────────
 
     /// @notice Caller is not an authorized recorder.
@@ -31,6 +34,12 @@ contract PhantomSettlement is ISettlement, Ownable {
 
     /// @notice The address is the zero address.
     error ZeroAddress();
+
+    /// @notice Invalid fill result: filler is zero address.
+    error InvalidFiller();
+
+    /// @notice Invalid fill result: amounts must be positive.
+    error InvalidAmount();
 
     // ─── Types ───────────────────────────────────────────────────────
 
@@ -103,6 +112,10 @@ contract PhantomSettlement is ISettlement, Ownable {
     function recordFill(FillResult calldata result) external onlyRecorder {
         if (_settlements[result.orderHash].settledAt != 0) revert AlreadySettled();
 
+        // Validate FillResult fields to prevent invalid settlements
+        if (result.filler == address(0)) revert InvalidFiller();
+        if (result.inputAmount == 0 || result.outputAmount == 0) revert InvalidAmount();
+
         _settlements[result.orderHash] = Settlement({
             filler: result.filler,
             inputAmount: result.inputAmount,
@@ -160,6 +173,7 @@ contract PhantomSettlement is ISettlement, Ownable {
     function resolveDispute(bytes32 orderHash) external onlyOwner {
         if (_settlements[orderHash].settledAt == 0) revert NotSettled();
         _settlements[orderHash].disputed = false;
+        emit DisputeResolved(orderHash, msg.sender);
     }
 
     /// @notice Checks whether a settlement is disputed.
