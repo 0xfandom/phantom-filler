@@ -37,6 +37,9 @@ contract PhantomFiller is IFiller, Ownable, ReentrancyGuard {
     /// @notice Emitted when tokens are withdrawn by the owner.
     event TokenWithdrawn(address indexed token, address indexed to, uint256 amount);
 
+    /// @notice Emitted when ETH is withdrawn by the owner.
+    event EthWithdrawn(address indexed to, uint256 amount);
+
     // ─── Errors ──────────────────────────────────────────────────────
 
     /// @notice Caller is not an authorized filler.
@@ -47,6 +50,15 @@ contract PhantomFiller is IFiller, Ownable, ReentrancyGuard {
 
     /// @notice The address is the zero address.
     error ZeroAddress();
+
+    /// @notice ETH transfer failed.
+    error EthTransferFailed(address recipient, uint256 amount);
+
+    /// @notice Insufficient contract balance for withdrawal.
+    error InsufficientBalance(uint256 required, uint256 available);
+
+    /// @notice Batch size exceeds maximum allowed.
+    error BatchSizeTooLarge(uint256 size, uint256 maxSize);
 
     // ─── State ───────────────────────────────────────────────────────
 
@@ -143,8 +155,15 @@ contract PhantomFiller is IFiller, Ownable, ReentrancyGuard {
     /// @param amount The amount of ETH to withdraw.
     function withdrawEth(address payable to, uint256 amount) external onlyOwner {
         if (to == address(0)) revert ZeroAddress();
+        if (amount == 0) revert ZeroAddress();
+
+        uint256 balance = address(this).balance;
+        if (balance < amount) revert InsufficientBalance(amount, balance);
+
         (bool success,) = to.call{value: amount}("");
-        require(success, "ETH transfer failed");
+        if (!success) revert EthTransferFailed(to, amount);
+
+        emit EthWithdrawn(to, amount);
     }
 
     // ─── Fill Functions ──────────────────────────────────────────────
@@ -189,6 +208,11 @@ contract PhantomFiller is IFiller, Ownable, ReentrancyGuard {
         nonReentrant
     {
         if (!whitelistedReactors[reactor]) revert UnauthorizedReactor();
+
+        // Validate batch size to prevent excessive gas consumption
+        uint256 batchSize = orders.length;
+        if (batchSize == 0 || batchSize > 256) revert BatchSizeTooLarge(batchSize, 256);
+
         IReactor(reactor).executeBatch(orders, fillerData);
         emit FillExecuted(reactor, msg.sender);
     }
